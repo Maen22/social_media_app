@@ -15,9 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from accounts.views import ActivateUserView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('activate/<int:pk>/<str:token>/', ActivateUserView.as_view()),
     path('', include('accounts.urls')),
     path('', include('profiles.urls'))
 ]

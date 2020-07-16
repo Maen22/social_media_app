@@ -29,8 +29,8 @@ class CreateUserSerializer(UserSerializer):
 
         email_is_valid = validate_email(email, check_mx=True)
 
-        # if not email_is_valid:
-        #     raise serializers.ValidationError(_('No MX record for domain found. (The email doesnt exist)'))
+        if not email_is_valid:
+            raise serializers.ValidationError(_('No MX record for domain found. (The email doesnt exist)'))
 
         password_validation.validate_password(password=password)
 
@@ -51,7 +51,9 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         """
 
         email = attrs.get('email')
-        validate_email(email, verify=True)
+        email_is_valid = validate_email(email, check_mx=True)
+        if not email_is_valid:
+            raise serializers.ValidationError(_('No MX record for domain found. (The email doesnt exist)'))
         return attrs
 
 

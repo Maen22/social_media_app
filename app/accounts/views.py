@@ -27,28 +27,7 @@ class UserRelatedView(mixins.RetrieveModelMixin,
 
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAdminUser]
     lookup_field = 'pk'
-
-    def update(self, request, pk=None):
-        user = get_object_or_404(self.queryset, pk=pk)
-        serializer = UpdateUserSerializer(data=request.data, partial=False)
-        serializer.is_valid(raise_exception=True)
-        serializer.update(instance=user, validated_data=serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def partial_update(self, request, pk=None):
-        user = get_object_or_404(self.queryset, pk=pk)
-        serializer = UpdateUserSerializer(data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.update(instance=user, validated_data=serializer.validated_data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, pk=None):
-        user = get_object_or_404(self.queryset, pk=pk)
-        user.is_active = False
-        user.save()
-        return Response('Object deactivated successfully', status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def create_user(self, request):
@@ -64,8 +43,8 @@ class UserRelatedView(mixins.RetrieveModelMixin,
             mail_subject, message, to=[to_email]
         )
         email.send()
-        serializer.data['detail'] = "Please confirm your email address to complete the registration"
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.data['detail'] = "Please check your email address to complete the registration"
+        return Response("Please check your email address to complete the registration", status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def login(self, request):
@@ -87,7 +66,7 @@ class UserRelatedView(mixins.RetrieveModelMixin,
 
     # url_path for customizing all the methods
     @action(detail=False, methods=['get', 'put', 'patch', 'delete'], permission_classes=[permissions.IsAuthenticated])
-    def me(self, request):
+    def user_details(self, request):
 
         user = request.user
 

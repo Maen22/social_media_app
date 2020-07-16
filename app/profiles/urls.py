@@ -7,6 +7,6 @@ router = routers.DefaultRouter()
 router.register('profiles', ProfileViewSet, basename='api/v1')
 
 urlpatterns = [
-    path('profile_search/<str:first_name>/', SearchForProfiles.as_view()),
+    path('profile_search/', SearchForProfiles.as_view()),
     path('', include(router.urls)),
 ]
