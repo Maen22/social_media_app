@@ -89,4 +89,3 @@ class SearchForProfiles(APIView):
             return self.get_paginated_response(serializer.data)
         serializer = SearchProfileSerializer(profiles, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
