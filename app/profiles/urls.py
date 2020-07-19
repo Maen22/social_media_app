@@ -4,9 +4,12 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 
-router.register('profiles', ProfileViewSet, basename='api/v1')
+router.register('profiles', ProfileViewSet)
+
+app_name = 'profile'
 
 urlpatterns = [
-    path('profile_search/', SearchForProfiles.as_view()),
     path('', include(router.urls)),
+    path('profile_search/', SearchForProfiles.as_view()),
+
 ]

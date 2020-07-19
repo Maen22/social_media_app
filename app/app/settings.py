@@ -13,13 +13,15 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', '#%&*(@#$FSDGFSDGREasdasfaqweqg')
+# SECRET_KEY = os.environ.get('SECRET_KEY', '#%&*(@#$FSDGFSDGREasdasfaqweqg')
+SECRET_KEY = '#%&*(@#$FSDGFSDGREasdasfaqweqg'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,13 +39,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # 3rd party
+
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
 
     # Local
     'accounts',
     'profiles',
     'friendship',
+    'posts',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +66,9 @@ ROOT_URLCONF = 'app.urls'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
+
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 1
 }
@@ -141,6 +148,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
+
+LOGIN_URL = 'admin:index'
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'

@@ -1,13 +1,13 @@
 from django.urls import path, include
 from rest_framework import routers
 
-from .views import UserRelatedView, ActivateUserView
+from .views import PostViewSet
 
 router = routers.DefaultRouter()
 
-router.register('users', UserRelatedView)
+router.register('posts', PostViewSet)
 
-app_name = 'user'
+app_name = 'posts'
 
 urlpatterns = [
     path('', include(router.urls)),

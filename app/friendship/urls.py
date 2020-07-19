@@ -1,13 +1,13 @@
 from django.urls import path, include
 from rest_framework import routers
 
-from .views import UserRelatedView, ActivateUserView
+from .views import FriendshipViewSet
 
 router = routers.DefaultRouter()
 
-router.register('users', UserRelatedView)
+router.register('friends', FriendshipViewSet)
 
-app_name = 'user'
+app_name = 'friendship'
 
 urlpatterns = [
     path('', include(router.urls)),
