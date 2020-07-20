@@ -2,12 +2,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import mixins, filters, status
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from .models import Post, Like, Comment
-from .serializers import PostDetailSerializer, LikeSerializer, CommentSerializer, CreateCommentSerializer
+from .serializers import PostDetailSerializer, CreateCommentSerializer, LikeSerializer, CommentSerializer
 
 
 class PostViewSet(GenericViewSet,
@@ -24,8 +25,26 @@ class PostViewSet(GenericViewSet,
     filter_backends = [filters.SearchFilter]
     search_fields = ['text']
 
+    pagination_classes = (PageNumberPagination,)
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        serializer.save(user=self.request.user.profile)
+
+    def paginated_data(self, qs):
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    def get_serializer(self, *args, **kwargs):
+        if self.action == 'post_likes_detail':
+            return LikeSerializer(*args, **kwargs)
+        elif self.action == 'post_comments_detail':
+            return CommentSerializer(*args, **kwargs)
+        return self.serializer_class(*args, **kwargs)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def list_posts(self, request):
@@ -35,16 +54,14 @@ class PostViewSet(GenericViewSet,
             num_likes = post.like_set.count()
             num_comments = post.comment_set.count()
             data = {
-                'user': post.user.pk,
+                'owner': post.fullname,
                 'text': post.text,
                 'likes': num_likes,
                 'comments': num_comments
             }
             result.append(data)
 
-        serializer = PostDetailSerializer(data=result, many=True)
-        serializer.is_valid()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return self.paginated_data(result)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):  # dont forget the unlike and delete comment
@@ -68,16 +85,17 @@ class PostViewSet(GenericViewSet,
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def post_detail(self, request, pk=None):
         post = get_object_or_404(Post, pk=pk)
-        user = post.user.pk
         num_likes = post.like_set.count()
         num_comments = post.comment_set.count()
         data = {
-            'user': user,
+            'owner': post.fullname,
             'text': post.text,
             'likes': num_likes,
             'comments': num_comments
         }
-        serializer = PostDetailSerializer(post, data=data)
+
+        serializer = PostDetailSerializer(data)
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
@@ -85,17 +103,18 @@ class PostViewSet(GenericViewSet,
         post = get_object_or_404(Post, pk=pk)
         likes = list(post.like_set.all())
 
-        likes = [{'fullname': like.fullname} for like in likes]
-        serializer = LikeSerializer(data=likes, many=True)
-        serializer.is_valid()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        likes = [{'owner': like.fullname} for like in likes]
+        return self.paginated_data(likes)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def post_comments_detail(self, request, pk=None):
         post = get_object_or_404(Post, pk=pk)
         comments = list(post.comment_set.all())
-        print(comments)
-
-        serializer = CommentSerializer(comments, many=True)
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        result = []
+        for comment in comments:
+            data = {
+                'owner': comment.fullname,
+                'text': comment.text
+            }
+            result.append(data)
+        return self.paginated_data(result)

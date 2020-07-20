@@ -12,27 +12,25 @@ def string_not_empty(value):
 
 
 class LikeSerializer(serializers.Serializer):
-    fullname = serializers.CharField()
+    owner = serializers.CharField()
 
 
 class CommentSerializer(LikeSerializer):
-
     text = serializers.CharField()
+
 
 class CreateCommentSerializer(serializers.Serializer):
     text = serializers.CharField(required=True)
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    user = serializers.IntegerField()
+    # user = serializers.IntegerField()
+    owner = serializers.CharField()
     likes = serializers.IntegerField()
     comments = serializers.IntegerField()
 
     class Meta:
         model = Post
-        fields = ('user', 'text', 'likes', 'comments', 'created_at',)
-        read_only_fields = ('user', 'likes', 'comments', 'created_at',)
+        fields = ('owner', 'likes', 'comments', 'created_at',)
+        read_only_fields = ('owner', 'likes', 'comments', 'created_at',)
 
-
-class PostLikesSerializer(serializers.Serializer):
-    likes = LikeSerializer(many=True)
