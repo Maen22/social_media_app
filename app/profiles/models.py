@@ -17,4 +17,8 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.first_name
+        return self.first_name + ' ' + self.last_name
+
+    @property
+    def full_name(self):
+        return self.first_name + ' ' + self.last_name
