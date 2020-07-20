@@ -24,14 +24,27 @@ class PostViewSet(GenericViewSet,
     filter_backends = [filters.SearchFilter]
     search_fields = ['text']
 
-    def get_queryset(self):
-        if self.action == 'list':
-            return self.queryset
-
-        return self.queryset.filter(user=self.request.user)
-
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def list_posts(self, request):
+        posts = Post.objects.all()
+        result = []
+        for post in posts:
+            num_likes = post.like_set.count()
+            num_comments = post.comment_set.count()
+            data = {
+                'user': post.user.pk,
+                'text': post.text,
+                'likes': num_likes,
+                'comments': num_comments
+            }
+            result.append(data)
+
+        serializer = PostDetailSerializer(data=result, many=True)
+        serializer.is_valid()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):  # dont forget the unlike and delete comment
@@ -71,15 +84,9 @@ class PostViewSet(GenericViewSet,
     def post_likes_detail(self, request, pk=None):
         post = get_object_or_404(Post, pk=pk)
         likes = list(post.like_set.all())
-        if len(likes) > 1:
-            likes = [{'fullname': like.fullname} for like in likes]
-            serializer = LikeSerializer(data=likes, many=True)
-            serializer.is_valid()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        if len(likes) == 0:
-            return Response("No Likes for this post yet", status=status.HTTP_200_OK)
-        like = {'fullname': likes[0].fullname}
-        serializer = LikeSerializer(data=like)
+
+        likes = [{'fullname': like.fullname} for like in likes]
+        serializer = LikeSerializer(data=likes, many=True)
         serializer.is_valid()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -88,22 +95,7 @@ class PostViewSet(GenericViewSet,
         post = get_object_or_404(Post, pk=pk)
         comments = list(post.comment_set.all())
         print(comments)
-        if len(comments) > 1:
-            newComments = []
-            for comment in comments:
-                newComments.append({'fullname': comment.fullname, 'text': comment.text})
-            # comments = [{('fullname'),('text'): (comment.fullname, comment.text)} for comment in comments]
-            print(newComments)
-            serializer = CommentSerializer(data=newComments, many=True)
-            serializer.is_valid()
-            return Response(serializer.data, status=status.HTTP_200_OK)
 
-        if len(comments) == 0:
-            return Response("No comments for this post yet", status=status.HTTP_200_OK)
+        serializer = CommentSerializer(comments, many=True)
 
-        comment = {'fullname': comments[0].fullname,
-                   'text': comments[0].text}
-
-        serializer = CommentSerializer(data=comment)
-        serializer.is_valid()
         return Response(serializer.data, status=status.HTTP_200_OK)

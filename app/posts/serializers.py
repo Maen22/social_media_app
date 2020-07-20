@@ -15,8 +15,8 @@ class LikeSerializer(serializers.Serializer):
     fullname = serializers.CharField()
 
 
-class CommentSerializer(serializers.Serializer):
-    fullname = serializers.CharField()
+class CommentSerializer(LikeSerializer):
+
     text = serializers.CharField()
 
 class CreateCommentSerializer(serializers.Serializer):
