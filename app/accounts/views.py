@@ -6,13 +6,25 @@ from rest_framework import permissions, mixins
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import UserSerializer, AuthTokenSerializer, PasswordChangeSerializer, CreateUserSerializer, \
     UpdateUserSerializer
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
 
 
 class UserRelatedView(mixins.RetrieveModelMixin,
@@ -25,9 +37,12 @@ class UserRelatedView(mixins.RetrieveModelMixin,
     'DELETE') the users data through the users/ url for superusers, and 'users/me/' url for the authenticated users
     """
 
+    authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAdminUser,)
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     lookup_field = 'pk'
+
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def create_user(self, request):
@@ -51,8 +66,8 @@ class UserRelatedView(mixins.RetrieveModelMixin,
         serializer = AuthTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'user_id': user.id})
+        tokens = get_tokens_for_user(user=user)
+        return Response(tokens, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['put'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):

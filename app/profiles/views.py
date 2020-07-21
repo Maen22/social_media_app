@@ -1,26 +1,21 @@
-from django.contrib.auth import get_user_model
 from rest_framework import viewsets, mixins, permissions, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.pagination import PageNumberPagination
 
 from profiles.models import Profile
 from profiles.serializers import ProfileSerializer, SearchProfileSerializer
 
 
 class ProfileViewSet(viewsets.GenericViewSet,
-                     mixins.RetrieveModelMixin,
                      mixins.CreateModelMixin):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAdminUser,)
     serializer_class = ProfileSerializer
     queryset = Profile.objects.all()
-
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -78,14 +73,20 @@ class SearchForProfiles(APIView):
         assert self.paginator is not None
         return self.paginator.get_paginated_response(data)
 
-    def get(self, request):
-        first_name = request.query_params.get('first_name', None)
-        print(first_name)
-
-        profiles = Profile.objects.filter(first_name=first_name).order_by('-id')
-        page = self.paginate_queryset(profiles)
+    def paginate_qs(self, queryset):
+        page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = SearchProfileSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = SearchProfileSerializer(profiles, many=True)
+        serializer = SearchProfileSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get(self, request):
+        first_name = request.query_params.get('first_name', None)
+        last_name = request.query_params.get('last_name', None)
+
+        s1_profiles = Profile.objects.filter(first_name=first_name).order_by('-id')
+        if last_name:
+            s2_profiles = s1_profiles.filter(last_name=last_name)
+            self.paginate_qs(s2_profiles)
+        self.paginate_qs(s1_profiles)

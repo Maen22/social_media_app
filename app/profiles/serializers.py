@@ -6,7 +6,7 @@ from .models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ('first_name', 'last_name', 'birthday', 'gender', 'created_at',)
+        fields = ('first_name', 'last_name', 'birthday', 'gender', "address", 'picture',)
 
 
 class SearchProfileSerializer(serializers.ModelSerializer):
@@ -16,4 +16,4 @@ class SearchProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('first_name', 'last_name', 'birthday', 'gender', "address", 'picture', 'user',)
+        fields = ('user', 'first_name', 'last_name', 'birthday', 'gender', "address", 'picture',)

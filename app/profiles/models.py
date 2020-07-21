@@ -16,9 +16,9 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    def __str__(self):
-        return self.first_name + ' ' + self.last_name
-
     @property
     def full_name(self):
         return self.first_name + ' ' + self.last_name
+
+    def __str__(self):
+        return self.full_name
