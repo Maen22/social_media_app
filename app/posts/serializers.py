@@ -1,36 +1,38 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
-from .models import Post
-
-
-def string_not_empty(value):
-    text = value
-    valid = text.strip()
-    if not valid:
-        return ValidationError('Comment must be filled with text')
+from .models import Post, Like, Comment
 
 
-class LikeSerializer(serializers.Serializer):
-    owner = serializers.CharField()
+class BaseSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.full_name')
+
+    class Meta:
+        model = None
+        fields = ('owner', 'created_at',)
 
 
-class CommentSerializer(LikeSerializer):
-    text = serializers.CharField()
+class LikeSerializer(BaseSerializer):
+    class Meta:
+        model = Like
 
 
-class CreateCommentSerializer(serializers.Serializer):
+class CommentSerializer(BaseSerializer):
+    class Meta(BaseSerializer.Meta):
+        model = Comment
+        fields = BaseSerializer.Meta.fields + ('text', )
+
+
+class CreateCommentSerializer(serializers.ModelSerializer):
     text = serializers.CharField(required=True)
 
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    # user = serializers.IntegerField()
-    owner = serializers.CharField()
-    likes = serializers.IntegerField()
-    comments = serializers.IntegerField()
+    owner = serializers.ReadOnlyField(source='owner.full_name')
+    likes = serializers.ReadOnlyField(source='num_likes')
+    comments = serializers.ReadOnlyField(source='num_comments')
 
     class Meta:
         model = Post
-        fields = ('owner', 'likes', 'comments', 'created_at',)
-        read_only_fields = ('owner', 'likes', 'comments', 'created_at',)
-
+        fields = ('id', 'owner', 'text', 'likes', 'comments', 'created_at',)
+        extra_kwargs = {'likes': {'read_only': True},
+                        'comments': {'read_only': True}}
