@@ -1,12 +1,14 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, filters, status
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from friendship.models import Friendship
 from .models import Post, Like, Comment
 from .serializers import PostDetailSerializer, CreateCommentSerializer, LikeSerializer, CommentSerializer
 
@@ -16,14 +18,37 @@ serializers = {
 }
 
 
+# class PostPermission(permissions.BasePermission):
+#     def are_friends(self, user1, user2, request):
+#         result = Friendship.objects.filter(
+#             Q(user_one_id=user1, user_two_id=user2, status=2)
+#             | Q(user_one_id=user2, user_two_id=user1, status=2)) \
+#             .distinct().all()
+#         if result or user2.user == request.user:
+#             return True
+#         return False
+#
+#     def has_object_permission(self, request, view, obj):
+
+
+
+def are_friends(user1, user2, request):
+    result = Friendship.objects.filter(
+        Q(user_one_id=user1, user_two_id=user2, status=2)
+        | Q(user_one_id=user2, user_two_id=user1, status=2)) \
+        .distinct().all()
+    if result or user2.user == request.user:
+        return True
+    return False
+
+
 class PostViewSet(GenericViewSet,
                   mixins.CreateModelMixin,
                   mixins.ListModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin):
-
-    authentication_classes = (SessionAuthentication, TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     queryset = Post.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -89,17 +114,30 @@ class PostViewSet(GenericViewSet,
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def post_detail(self, request, pk=None):
-        self.queryset = get_object_or_404(Post, pk=pk)
-        return self.retrieve(request=request)
+        post = get_object_or_404(Post, pk=pk)
+        owner = post.owner
+        if are_friends(user1=self.request.user.profile, user2=owner, request=request):
+            self.queryset = post
+            return self.retrieve(request=request)
+            # needs to be customized!!
+        return Response('You and the owner of this post are not friends!', status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def post_likes_detail(self, request, pk=None):
         post = get_object_or_404(Post, pk=pk)
-        self.queryset = post.like_set.all()
-        return self.list(request)
+        owner = post.owner
+        if are_friends(user1=self.request.user.profile, user2=owner, request=request):
+            self.queryset = post.like_set.all()
+            return self.list(request)
+        return Response('You and the owner of this post are not friends!',
+                        status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def post_comments_detail(self, request, pk=None):
         post = get_object_or_404(Post, pk=pk)
-        self.queryset = post.comment_set.all()
-        return self.list(request=request)
+        owner = post.owner
+        if are_friends(user1=self.request.user.profile, user2=owner, request=request):
+            self.queryset = post.comment_set.all()
+            return self.list(request=request)
+        return Response('You and the owner of this post are not friends!',
+                        status=status.HTTP_403_FORBIDDEN)

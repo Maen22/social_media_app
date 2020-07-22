@@ -10,10 +10,9 @@ class SpecifUserSerializer(ProfileSerializer):
 
 
 class FriendshipSerializer(serializers.ModelSerializer):
-    user_one_id = SpecifUserSerializer()
-    user_two_id = SpecifUserSerializer()
+    friend = SpecifUserSerializer(source='user_two_id')
 
     class Meta:
         model = Friendship
-        fields = ('user_one_id', 'user_two_id', 'status', 'created_at')
+        fields = ('friend', 'created_at')
 

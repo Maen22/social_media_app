@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from profiles.models import Profile
-from .exceptions import AlreadyExistsError, AlreadyFriendsError, BlockedError
+from .exceptions import AlreadyExistsError, AlreadyFriendsError
 
 
 class FriendshipManager(models.Manager):
@@ -111,11 +111,9 @@ class Friendship(models.Model):
         ACCEPTED = 2
         DECLINED = 3
 
-    user_one_id = models.ForeignKey(Profile, models.CASCADE, related_name="friends")
+    user_one_id = models.ForeignKey(Profile, models.CASCADE, related_name='user1')
 
-    user_two_id = models.ForeignKey(
-        Profile, models.CASCADE, related_name="_unused_friend_relation"
-    )
+    user_two_id = models.ForeignKey(Profile, models.CASCADE, related_name='user2')
 
     status = models.IntegerField(choices=Status.choices, null=True)
 

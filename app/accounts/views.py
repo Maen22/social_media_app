@@ -4,7 +4,6 @@ from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, mixins
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -19,6 +18,10 @@ from .serializers import UserSerializer, AuthTokenSerializer, PasswordChangeSeri
 
 
 def get_tokens_for_user(user):
+    """
+        Returns JWT authentication token for a user
+    """
+
     refresh = RefreshToken.for_user(user)
 
     return {

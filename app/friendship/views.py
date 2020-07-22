@@ -1,10 +1,10 @@
 from django.db.models import Q
 from rest_framework import mixins, status
-from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from accounts.models import User
 from .models import Friendship
@@ -14,7 +14,7 @@ from .serializers import FriendshipSerializer
 class FriendshipViewSet(GenericViewSet,
                         mixins.ListModelMixin,
                         mixins.RetrieveModelMixin):
-    authentication_classes = (SessionAuthentication, TokenAuthentication,)
+    authentication_classes = (JWTAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = FriendshipSerializer
     queryset = Friendship.objects.all()
@@ -26,6 +26,11 @@ class FriendshipViewSet(GenericViewSet,
             Q(user_one_id=self.request.user.profile)
             | Q(user_two_id=self.request.user.profile)
         ).distinct().all()
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_friends(self, request):
+        self.queryset = self.get_queryset().filter(status=2).order_by('-id')
+        return self.list(request=request)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def add_friend(self, request, pk=None):
