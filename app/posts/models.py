@@ -3,8 +3,13 @@ from profiles.models import Profile
 
 
 class Post(models.Model):
+    public = 'public'
+    private = 'private'
+    FLAG_CHOICES = [(public, 'public'), (private, 'private')]
+
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE)
     text = models.TextField()
+    flag = models.CharField(max_length=10, choices=FLAG_CHOICES, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property

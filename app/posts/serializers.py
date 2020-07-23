@@ -19,7 +19,7 @@ class LikeSerializer(BaseSerializer):
 class CommentSerializer(BaseSerializer):
     class Meta(BaseSerializer.Meta):
         model = Comment
-        fields = BaseSerializer.Meta.fields + ('text', )
+        fields = BaseSerializer.Meta.fields + ('text',)
 
 
 class CreateCommentSerializer(serializers.ModelSerializer):
@@ -33,6 +33,6 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'owner', 'text', 'likes', 'comments', 'created_at',)
+        fields = ('id', 'owner', 'text', 'flag', 'likes', 'comments', 'created_at',)
         extra_kwargs = {'likes': {'read_only': True},
                         'comments': {'read_only': True}}
