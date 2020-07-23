@@ -7,6 +7,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from accounts.models import User
+from profiles.models import Profile
 from .models import Friendship
 from .serializers import FriendshipSerializer
 
@@ -31,6 +32,27 @@ class FriendshipViewSet(GenericViewSet,
     def my_friends(self, request):
         self.queryset = self.get_queryset().filter(status=2).order_by('-id')
         return self.list(request=request)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def mutual_friends(self, request, pk=None):
+        user2 = Profile.objects.get(pk=pk)
+        friends_with_user1 = self.get_queryset().filter(status=2).values_list('user_two_id', flat=True)
+        friends_with_user1_ = self.get_queryset().filter(status=2).values_list('user_one_id', flat=True)
+        print(friends_with_user1)
+        friends_with_user2 = Friendship.objects.filter(Q(user_one_id=user2, status=2)
+                                                       | Q(user_two_id=user2, status=2)).distinct().all()
+        print(friends_with_user2)
+        mutual_friends_of_user1_user2 = friends_with_user2.filter(
+            Q(user_two_id__in=friends_with_user1) | Q(user_one_id__in=friends_with_user1)).distinct().all()  # | Q(user_two_id__in=friends_with_user1)
+        print(mutual_friends_of_user1_user2)
+        self.queryset = mutual_friends_of_user1_user2.order_by('-id')
+        page = self.paginate_queryset(self.queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(self.queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
     def add_friend(self, request, pk=None):

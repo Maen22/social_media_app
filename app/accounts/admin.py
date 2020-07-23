@@ -8,7 +8,7 @@ from .models import User
 class UserAdmin(BaseUserAdmin):
     ordering = ('id',)
 
-    list_display = ('email',)
+    list_display = ('id', 'email',)
 
     fieldsets = (
         (None, {'fields': ('email', 'password',)}),
