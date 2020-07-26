@@ -5,7 +5,13 @@ import sys
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
+    os.environ.setdefault('DB_HOST', 'localhost')
+    os.environ.setdefault('DB_NAME', 'social_app_db')
+    os.environ.setdefault('DB_USER', 'postgres')
+    os.environ.setdefault('DB_PASS', 'maen_1234')
+    os.environ.setdefault('PORT', '5432')
+    os.environ.setdefault('DEBUG', 'False')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.production_settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
