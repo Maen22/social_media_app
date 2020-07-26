@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '#%&*(@#$FSDGFSDGREasdasfaqweqg')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
 
@@ -97,11 +97,11 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "social_app_db",
-        'USER': "postgres",
+        'NAME': os.environ.get('DB_NAME', None),
+        'USER': os.environ.get('DB_USER', None),
         'PASSWORD': os.environ.get('DB_PASS', None),
-        'HOST': "localhost",
-        'PORT': "5432",
+        'HOST': os.environ.get('DB_HOST', None),
+        'PORT': os.environ.get('PORT', None),
     }
 }
 
