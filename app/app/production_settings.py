@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', '#%&*(@#$FSDGFSDGREasdasfaqweqg')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -43,12 +43,14 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'drf_yasg',
+    'django_celery_beat',
 
     # Local
     'accounts',
     'profiles',
     'friendship',
     'posts',
+    'stories',
 ]
 
 MIDDLEWARE = [
@@ -204,3 +206,9 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
+BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

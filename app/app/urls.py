@@ -45,6 +45,7 @@ urlpatterns = [
     path('', include('profiles.urls')),
     path('', include('friendship.urls')),
     path('', include('posts.urls')),
+    path('stories/', include('stories.urls')),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
